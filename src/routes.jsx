@@ -1,0 +1,89 @@
+import Login from "./pages/login"
+import MenuCarnes from "./pages/menuMC"
+
+import ModuleItems from "./config/modulesItems"
+
+import AppLayout from "./layout"
+
+import Home from "./pages/home"
+import Profile from "./pages/profile"
+import Account from "./pages/account"
+import PaymentMethodPage from "./pages/paymentMethod"
+
+import Dashboard from "./modules/dashboard/dashboard"
+
+import ModuleIndex from "./components/shared/moduleIndex"
+
+import Role from "./modules/user/role"
+import User from "./modules/user/user"
+
+import Warehouse from "./modules/inventory/warehouse"
+import Product from "./modules/inventory/product"
+import Stock from "./modules/inventory/stock"
+import Movement from "./modules/inventory/movement"
+
+import ManageBranch from "./modules/sale/manageBranch"
+import SalePoint from "./modules/sale/salePoint"
+import CashSale from "./modules/sale/cashSale"
+import ReportSale from "./modules/sale/reportSale"
+import Invoices from "./modules/sale/invoices"
+import CreditNote from "./modules/sale/creditNote"
+import CostCenter from "./modules/sale/cost_center"
+import PaymentMethod from "./modules/sale/payment_method"
+import InvoiceResolution from "./modules/sale/invoiceResolution"
+
+import InvoicePOS from "./modules/synchronization/invoicePOS"
+
+
+
+const MundoCarnesPosRoutes = [
+    { path: "/", element: <Login/> },
+    {path: "/menu", element: <MenuCarnes/> },
+
+    { element: <AppLayout/>, 
+        children: [
+            { path: "/home", element: <Home/> },
+            { path: "/profile", element: <Profile/> },
+            { path: "/account-sync", element: <Account/> },
+            { path: "/payment-method", element: <PaymentMethodPage/> },
+
+            {path: "/dashboard", element: <Dashboard/> },
+
+
+            /*========================================================
+                RUTAS PARA EL MODULO DE USER
+            =========================================================== */
+            { path: "/user", element: <ModuleIndex items={ModuleItems["Usuarios"]} title={"Gestión de Usuarios"}/>},
+            { path: "/user/role", element: <Role/> },
+            { path: "/user/user", element: <User/> },
+
+            /*========================================================
+                RUTAS PARA EL MODULO DE INVENTARIO
+            =========================================================== */
+            { path: "/inventory", element: <ModuleIndex items={ModuleItems["Inventario"]} title={"Gestión de Inventario"}/>},
+            { path: "/inventory/warehouse", element: <Warehouse/>},
+            { path: "/inventory/product", element: <Product/> },
+            { path: "/inventory/stock", element: <Stock/> },
+            { path: "/inventory/movement", element: <Movement/> },
+
+            /*========================================================
+                RUTAS PARA EL MODULO DE VENTAS
+            =========================================================== */
+            { path: "/sale", element: <ModuleIndex items={ModuleItems["Ventas"]} title={"Gestión de Ventas"}/>},
+            { path: "/sale/manage-salepoint", element: <SalePoint/>},
+            { path: "/sale/manage-branch", element: <ManageBranch/>},
+            { path: "/sale/cash-sale", element: <CashSale/>},
+            { path: "/sale/report", element: <ReportSale/>},
+            { path: "/sale/invoices", element: <Invoices/>},
+            { path: "/sale/credit-note", element: <CreditNote/>},
+            { path: "/sale/cost-center", element: <CostCenter/>},
+            { path: "/sale/payment-method", element: <PaymentMethod/>},
+            { path: "/sale/invoice-resolution", element: <InvoiceResolution/> },
+
+            { path: "/synchronization", element: <ModuleIndex items={ModuleItems["Sincronización"]} title={"Sincrionizacion con Siigo"}/> },
+            { path: "/synchronization/invoice", element: <InvoicePOS/> }
+        ]
+    }
+]
+
+export default MundoCarnesPosRoutes
