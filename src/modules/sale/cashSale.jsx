@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react"
-import { Barcode, Loader, Loader2, ShoppingCart, Trash2} from "lucide-react"
+import { Barcode, Loader, Loader2, ShoppingCart, Trash2, Edit, Check, X, Plus } from "lucide-react"
 
 import OpenCloseCash from "./cash sale/OpenCloseCash"
 import DecodeToken from "../../api/decode"
@@ -203,26 +203,80 @@ export default function CashSale() {
     useEffect(() => {
         localStorage.setItem("cashSaleTabs", JSON.stringify(tabs));
     }, [tabs]);
-    const [activeTabId, setActiveTabId] = useState(tabs[0].id) //Pestaña activa
+    const [activeTabId, setActiveTabId] = useState(tabs[0]?.id || Date.now()) //Pestaña activa
     const [barcode, setBarcode] = useState("") // Codigo escaneado
     const [name, setName] = useState("")
 
+    // Estado para edición del nombre de la pestaña
+    const [editingTabId, setEditingTabId] = useState(null);
+    const [editingTabName, setEditingTabName] = useState("");
 
+    // Calcular consecutivo por defecto para nueva pestaña ("Venta 1", "Venta 2", ...)
+    const getNextTabName = (currentTabs) => {
+        const numbers = currentTabs
+            .map((t) => {
+                const match = t.name?.match(/^Venta\s+(\d+)$/i);
+                return match ? parseInt(match[1], 10) : null;
+            })
+            .filter((n) => n !== null);
+        const nextNumber = numbers.length > 0 ? Math.max(...numbers) + 1 : currentTabs.length + 1;
+        return `Venta ${nextNumber}`;
+    };
 
     // Añadir / Eliminar pestañas
     const addTab = () => {
-        const newTab = { id: Date.now(), name: `Venta ${tabs.length + 1}`, cart: [], client: null };
+        const newTab = { 
+            id: Date.now(), 
+            name: getNextTabName(tabs), 
+            cart: [], 
+            client: null 
+        };
         setTabs((prev) => [...prev, newTab]);
         setActiveTabId(newTab.id);
     };
 
-    const closeTab = (id) => {
+    const closeTab = (id, e) => {
+        if (e) e.stopPropagation();
         if (tabs.length === 1) return; // siempre una pestaña
         setTabs((prev) => {
-        const newTabs = prev.filter((t) => t.id !== id);
-        setActiveTabId(newTabs[0].id)
-        return newTabs;
+            const newTabs = prev.filter((t) => t.id !== id);
+            if (activeTabId === id) {
+                const index = prev.findIndex((t) => t.id === id);
+                const nextActive = newTabs[index] || newTabs[index - 1] || newTabs[0];
+                if (nextActive) setActiveTabId(nextActive.id);
+            }
+            return newTabs;
         });
+        if (editingTabId === id) {
+            setEditingTabId(null);
+            setEditingTabName("");
+        }
+    };
+
+    // Funciones para edición del nombre de pestaña
+    const handleStartEditing = (tab, e) => {
+        if (e) e.stopPropagation();
+        setEditingTabId(tab.id);
+        setEditingTabName(tab.name);
+        setActiveTabId(tab.id);
+    };
+
+    const handleSaveTabName = (id, e) => {
+        if (e) e.stopPropagation();
+        const trimmed = editingTabName.trim();
+        if (trimmed) {
+            setTabs((prev) =>
+                prev.map((t) => (t.id === id ? { ...t, name: trimmed } : t))
+            );
+        }
+        setEditingTabId(null);
+        setEditingTabName("");
+    };
+
+    const handleCancelEditing = (e) => {
+        if (e) e.stopPropagation();
+        setEditingTabId(null);
+        setEditingTabName("");
     };
 
     // Utils: actualizar pestaña
@@ -604,18 +658,108 @@ export default function CashSale() {
                         isModeDatafono={isModeDatafono}
                         setModeDatafono={setModeDatafono}
                     />
-                    {/* Pestañas */}
-                    <section className="flex gap-2 w-full justify-center">
-                        <div className={`px-3 py-2 rounded ${tabs[0].id === activeTabId ? "bg-foreground text-amber-100" : "bg-amber-200 text-foreground"}`}>
-                            <button onClick={() => setActiveTabId(tabs[0].id)}>{tabs[0].name}</button>
-                        </div>
-                        {tabs.slice(1).map((t) => (
-                        <div key={t.id} className={`px-3 py-2 rounded ${t.id === activeTabId ? "bg-foreground text-amber-100" : "bg-amber-200 text-foreground"}`}>
-                            <button onClick={() => setActiveTabId(t.id)}>{t.name}</button>
-                            <button onClick={() => closeTab(t.id)} className="ml-2 text-sm">x</button>
-                        </div>
-                        ))}
-                        <button onClick={addTab} className="px-3 py-2 bg-green-500 text-white rounded">+ Nueva</button>
+                    {/* Pestañas de ventas */}
+                    <section className="flex gap-2 w-full overflow-x-auto pb-2 items-center">
+                        {tabs.map((t) => {
+                            const isActive = t.id === activeTabId;
+                            const isEditing = t.id === editingTabId;
+
+                            return (
+                                <div
+                                    key={t.id}
+                                    onClick={() => !isEditing && setActiveTabId(t.id)}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg shrink-0 cursor-pointer transition-all border ${
+                                        isActive
+                                            ? "bg-foreground text-amber-100 border-amber-400/30 shadow-md"
+                                            : "bg-amber-200 text-foreground hover:bg-amber-300 border-transparent"
+                                    }`}
+                                >
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={editingTabName}
+                                            onChange={(e) => setEditingTabName(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    handleSaveTabName(t.id, e);
+                                                } else if (e.key === "Escape") {
+                                                    e.preventDefault();
+                                                    handleCancelEditing(e);
+                                                }
+                                            }}
+                                            onBlur={(e) => handleSaveTabName(t.id, e)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            autoFocus
+                                            className={`text-sm font-semibold px-2 py-0.5 rounded outline-none border w-28 ${
+                                                isActive
+                                                    ? "bg-[#6E1515] text-amber-100 border-amber-300 focus:ring-1 focus:ring-amber-300"
+                                                    : "bg-white text-gray-800 border-amber-400 focus:ring-1 focus:ring-amber-500"
+                                            }`}
+                                        />
+                                    ) : (
+                                        <span
+                                            className="text-sm font-semibold truncate max-w-[130px]"
+                                            title={t.name}
+                                        >
+                                            {t.name}
+                                        </span>
+                                    )}
+
+                                    <div className="flex items-center gap-1">
+                                        {/* Botón 1: Editar / Guardar */}
+                                        {isEditing ? (
+                                            <button
+                                                type="button"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    handleSaveTabName(t.id, e);
+                                                }}
+                                                className="p-1 rounded hover:bg-white/20 text-emerald-400 hover:text-emerald-300 transition-colors"
+                                                title="Guardar nombre"
+                                            >
+                                                <Check size={15} />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => handleStartEditing(t, e)}
+                                                className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors opacity-70 hover:opacity-100"
+                                                title="Editar nombre"
+                                            >
+                                                <Edit size={14} />
+                                            </button>
+                                        )}
+
+                                        {/* Botón 2: Cerrar pestaña */}
+                                        <button
+                                            type="button"
+                                            disabled={tabs.length === 1}
+                                            onClick={(e) => closeTab(t.id, e)}
+                                            className={`p-1 rounded transition-colors ${
+                                                tabs.length === 1
+                                                    ? "opacity-25 cursor-not-allowed"
+                                                    : "opacity-70 hover:opacity-100 hover:bg-red-500/20 hover:text-red-500"
+                                            }`}
+                                            title={tabs.length === 1 ? "Mínimo una venta requerida" : "Cerrar venta"}
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        {/* Botón Nueva Pestaña */}
+                        <button
+                            type="button"
+                            onClick={addTab}
+                            className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-1 font-medium text-sm shrink-0 transition-colors shadow-sm"
+                            title="Crear nueva pestaña"
+                        >
+                            <Plus size={16} />
+                            <span>Nueva</span>
+                        </button>
                     </section>
                     {/*============================================================
                     COLUMNA DE ESCANEO Y CARRITO
