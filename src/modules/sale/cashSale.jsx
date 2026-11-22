@@ -632,6 +632,7 @@ export default function CashSale() {
 
             setPaymentValues({}); // limpiar pagos
             setSelectedCustomer(null); // limpiar cliente   
+            setModeDatafono(false)
         }
 
     };
