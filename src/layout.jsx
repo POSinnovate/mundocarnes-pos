@@ -82,43 +82,10 @@ export default function AppLayout() {
             }
         }
     }, [plan, today])
-
-    useEffect(() => {
-        if (!plan?.end_date) return
-
-        const currentDate = moment(today)
-        const endDate = moment(plan?.end_date)
-        const isExpired = currentDate.isAfter(endDate, 'day')
-
-        if (!isExpired) {
-            setShowSuspendedWarning(false)
-            suspensionRequestedRef.current = false
-            return
-        }
-
-        setShowPaymentWarning(false)
-        setShowSuspendedWarning(true)
-
-        if (!token?.id) return
-        if (suspensionRequestedRef.current) return
-
-        suspensionRequestedRef.current = true
-
-        ;(async () => {
-            try {
-                await axiosInstance.put('/posinnovate/siigo/subscription/suspend', { company: token?.company} )
-                await GET_Plan()
-            } catch (error) {
-                suspensionRequestedRef.current = false
-                toast.error(error?.response?.data?.message ?? error?.message ?? 'No se pudo suspender la cuenta.')
-            }
-        })()
-    }, [plan, today, token?.id])
-
  
     return (
         <div className={`bg-amber-50  h-screen flex flex-col`}>
-            <header ref={headerRef} className={`bg-[#841A1A] text-amber-100`}>
+            <header ref={headerRef} className={`bg-foreground text-amber-100`}>
                 <AppHeader modules={filteredModules}  onToggleSidebar={onToggleSidebar}/>
             </header>
            <main className="flex flex-1">
@@ -126,7 +93,7 @@ export default function AppLayout() {
                 {!showSuspendedWarning && (
                     <div
                         style={{ height: contentHeight }}
-                        className={`bg-[#841A1A] text-amber-100 overflow-y-auto hidden lg:flex p-3 flex-col items-center space-y-2 min-h-full transition-all duration-300 ${
+                        className={`bg-foreground text-amber-100 overflow-y-auto hidden lg:flex p-3 flex-col items-center space-y-2 min-h-full transition-all duration-300 ${
                         expanded ? "w-64" : "w-16"
                         }`}
                     >
