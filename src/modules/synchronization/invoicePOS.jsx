@@ -196,10 +196,12 @@ export default function InvoicePOS () {
                             <td className="px-4 py-2">
                                 <span
                                 className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                    inv.status === "active"
+                                    inv.status === "active" || inv.status === "synchronized"
                                     ? "bg-green-100 text-green-800"
                                     : inv.status === "credited"
                                     ? "bg-yellow-300 text-yellow-900"
+                                    : inv.status === "pending" || inv.status === "syncing"
+                                    ? "bg-amber-100 text-amber-800"
                                     : "bg-red-100 text-red-800"
                                 }`}
                                 >
