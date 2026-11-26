@@ -78,9 +78,11 @@ export default function useInvoiceSiigo() {
         // =================================================================
         // MODO 2: FACTURACIÓN POS CON SINCRONIZACIÓN EN SEGUNDO PLANO
         // =================================================================
+        const client = baseData?.customer?.id || "36faa3ab-12cf-45b8-b144-d3c91e6731d2";
         const payloadPOS = {
           ...baseData,
           code: "auto",
+          client,
           cufe: "Pendiente...",
           sync_mode: "async"
         };
