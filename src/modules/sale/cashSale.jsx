@@ -101,6 +101,7 @@ export default function CashSale() {
     const today = moment().tz("America/Bogota").format("YYYY-MM-DD");
     const token = DecodeToken()     
     const sp = useMemo(() => { return salePoints?.find(sp => sp.user === token.id)}, [salePoints, token?.id])  //Punto de venta del usuario]
+    const isDirectSiigo = sp ? Boolean(sp.direct_invoicing ?? true) : true
     const resolution = invoicesResolution?.find( ir => ir.sale_point === sp?.id)
     //console.log("Resolucion de fatura: ", resolution)
     const wh = sp?.warehouse
@@ -613,7 +614,7 @@ export default function CashSale() {
         }
 
         //console.log("Factura a imprimir: ", invoiceData)
-        const invoice = await POST_InvoiceSiigo(invoiceData)
+        const invoice = await POST_InvoiceSiigo(invoiceData, isDirectSiigo)
         // Guardar datos y disparar impresión
         if (invoice) {
             console.log("Factura a imprimir: ", {...invoice, invoiceItem: itemsPOS})
@@ -928,6 +929,13 @@ export default function CashSale() {
                 <hr className="border-amber-200/20 w-[90%]" />
 
                 <ClientSearch setCustomer={setSelectedCustomer} selectedCustomer={selectedCustomer}/>
+
+                {/* Indicador de Modo de Facturación configurado en el Punto de Venta (solo lectura) */}
+                <div className="flex items-center justify-center p-2 bg-amber-500/10 rounded-lg border border-amber-500/20 my-2 w-full">
+                    <span className="text-xs font-semibold flex items-center gap-1.5">
+                        {isDirectSiigo ? "⚡ Modo: Directo Siigo (En vivo)" : "🕒 Modo: POS Rápido (Sincroniza cada 20 min)"}
+                    </span>
+                </div>
 
                 <button onClick={() => handleConfirmPayment()} disabled={activeTab.cart.length === 0} className={`${sp?.status === "closed" && "cursor-not-allowed"} mt-4 bg-amber-200 text-foreground p-2 rounded font-semibold w-full`}>
                     {isLoading ? 

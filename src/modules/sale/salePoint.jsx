@@ -35,6 +35,7 @@ export default function SalePoint () {
         name: "",
         warehouse: "",
         cost_center: "",
+        direct_invoicing: true,
         methods: []
     }
     const [isSalePoint, setSalePoint] = useState(initialBaseSalesPoint) // control de datos de punto de venta
@@ -100,6 +101,7 @@ export default function SalePoint () {
                                 <tr>
                                     <th className="px-4 py-3 text-left text-nowrap">Punto de Venta</th>
                                     <th className="px-4 py-3 text-left text-nowrap">Estado</th>
+                                    <th className="px-4 py-3 text-left text-nowrap">Modo Facturación</th>
                                     <th className="px-4 py-3 text-left text-nowrap">Fecha de Abrir</th>
                                     <th className="px-4 py-3 text-left text-nowrap">Fecha de Cerrar</th>
                                     <th className="px-4 py-3 text-left text-nowrap">Sucursal</th>
@@ -113,7 +115,7 @@ export default function SalePoint () {
                             <tbody>
                                 {isLoading ? (
                                     <tr>
-                                        <td colSpan={10}>
+                                        <td colSpan={11}>
                                             <div className="p-4 w-full flex items-center justify-center gap-2">
                                                 <Loader className="w-5 h-5 animate-spin" />
                                                 Cargando Puntos de Venta...
@@ -132,6 +134,17 @@ export default function SalePoint () {
                                                 >
                                                 <p className={`h-2 w-2 animate-pulse rounded-full ${ sp.status === "open" ? "bg-green-700" : "bg-red-700" }`}/>
                                                 {sp.status === "open" ? "Abierto" : "Cerrado"}
+                                                </span>
+                                            </td>
+                                            <td className="p-4">
+                                                <span
+                                                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                                        sp.direct_invoicing !== false
+                                                            ? "bg-emerald-100 text-emerald-800"
+                                                            : "bg-amber-200 text-amber-900"
+                                                    }`}
+                                                >
+                                                    {sp.direct_invoicing !== false ? "⚡ Directo Siigo" : "🕒 POS Rápido (20 min)"}
                                                 </span>
                                             </td>
                                             <td className="p-4">{sp.opened_at || "DD-MM-AA HH:MM"}</td>
@@ -161,7 +174,10 @@ export default function SalePoint () {
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => {
-                                                            setSalePoint(sp)
+                                                            setSalePoint({
+                                                                ...sp,
+                                                                direct_invoicing: sp.direct_invoicing !== undefined ? Boolean(sp.direct_invoicing) : true
+                                                            })
                                                             setAction('Input Sales Point')
                                                         }}
                                                         className="flex gap-1   items-center justify-center text-blue-500 font-semibold  border-b cursor-pointer"
@@ -220,6 +236,44 @@ export default function SalePoint () {
                                         </div>
                                     </section>
                                 ))}
+                                {/* ===============================================================
+                                    MODO DE FACTURACIÓN DEL PUNTO DE VENTA
+                                =============================================================== */}
+                                <section className="col-span-1 sm:col-span-2 mt-2">
+                                    <label className="font-semibold text-md mb-1 block">Modo de Facturación</label>
+                                    <div className="bg-[#6E1515] rounded-lg p-4 flex items-center justify-between border border-amber-200/20">
+                                        <div className="flex flex-col">
+                                            <span className="font-semibold text-sm flex items-center gap-2">
+                                                {isSalePoint.direct_invoicing !== false
+                                                    ? "⚡ Facturación Directa con Siigo (En vivo)"
+                                                    : "🕒 Facturación POS Rápida (Sincroniza cada 20 min en segundo plano)"}
+                                            </span>
+                                            <span className="text-xs opacity-80">
+                                                {isSalePoint.direct_invoicing !== false
+                                                    ? "Cada venta se envía al instante a Siigo antes de imprimir."
+                                                    : "La venta se guarda al instante en caja y se sincroniza automáticamente con Siigo cada 20 minutos y al cerrar caja."}
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setSalePoint(prev => ({
+                                                    ...prev,
+                                                    direct_invoicing: prev.direct_invoicing === false ? true : false
+                                                }))
+                                            }
+                                            className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ${
+                                                isSalePoint.direct_invoicing !== false
+                                                    ? "bg-emerald-500 justify-end"
+                                                    : "bg-amber-400 justify-start"
+                                            }`}
+                                            title="Alternar modo de facturación para este punto de venta"
+                                        >
+                                            <div className="bg-white w-5 h-5 rounded-full shadow-md"></div>
+                                        </button>
+                                    </div>
+                                </section>
+
                                 {/* ===============================================================
                                     MÉTODOS DE PAGO ASIGNADOS AL PUNTO DE VENTA
                                 =============================================================== */}
